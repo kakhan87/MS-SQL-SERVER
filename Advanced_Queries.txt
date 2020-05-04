@@ -1,0 +1,40 @@
+Instructions
+Using AP database, write a single query for each task specified under Requirements.
+Requirements
+1. For each invoice that has PaymentDate (not null), calculate and display how many days before the due date the invoice was paid. More specifically, display invoiceID, invoice number, invoice date, invoice due date, payment date, and calculated column that is the number of days from payment date to due date (this column should have positive values where invoice was paid before due date, and negative if it was paid after due date).
+Display all date values without time component. Make sure all columns have meaningful headers.
+
+SELECT InvoiceID, InvoiceNumber, CONVERT(DATE, InvoiceDate) AS InvoiceDate, 
+	   CONVERT(DATE, InvoiceDueDate) AS InvoiceDueDate, isnull(FORMAT(PaymentDate, 'yyyy-MM-dd'), '') AS PaymentDate,
+	   isnull(datediff(DAY, PaymentDate, InvoiceDueDate), '') AS DaysToPayment
+FROM Invoices
+WHERE PaymentDate is NOT NULL
+
+2. Using InvoiceLineItems, display invoice ids together with how many lines each invoice has. Include only invoices that have more than one line. Make sure all columns have meaningful headers.
+
+SELECT InvoiceID, MAX(InvoiceSequence) AS InvoiceSequenceLines
+FROM InvoiceLineItems
+GROUP BY InvoiceID
+HAVING MAX(InvoiceSequence) > 1
+
+3. Add InvoiceNumber and VendorName to the previous query (you will need to join two more tables).
+
+SELECT InvoiceLineItems.InvoiceID, MAX(InvoiceSequence) AS InvoiceSequenceLines, Invoices.InvoiceNumber, Vendors.VendorName
+FROM InvoiceLineItems JOIN Invoices ON InvoiceLineItems.InvoiceID = Invoices.InvoiceID JOIN Vendors 
+ON Invoices.VendorID = Vendors.VendorID
+GROUP BY InvoiceLineItems.InvoiceID, Invoices.InvoiceNumber, Vendors.VendorName
+HAVING MAX(InvoiceSequence) > 1
+
+4. Display account numbers and descriptions of all accounts from GLAccounts table that are NOT referenced by any invoice line item.
+
+SELECT * 
+FROM GLAccounts
+WHERE AccountNo NOT IN (SELECT AccountNo FROM InvoiceLineItems)
+
+5. For each vendor who has invoices display vendor ID, vendor name and the date of the most recent invoice of that vendor. Display all date values without time component. Make sure all columns have meaningful headers.
+
+SELECT Vendors.VendorID, Vendors.VendorName, 
+	   CONVERT(DATE, MAX(InvoiceDate)) AS MostRecentInvoice
+FROM Vendors JOIN Invoices ON Vendors.VendorId = Invoices.VendorID
+GROUP BY Vendors.VendorID, Vendors.VendorName
+
